@@ -1,4 +1,4 @@
-# biohack2025
+# bh2025_scllms_p30
 
 Monorepo layout for scGPT, Cancer Foundation, and Nextflow pipelines.
 
