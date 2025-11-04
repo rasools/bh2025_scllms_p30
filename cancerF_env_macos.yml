@@ -1,0 +1,31 @@
+name: cancerF_env
+channels:
+  - pytorch
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - numpy=1.26
+  - pandas=2.3
+  - scipy=1.15
+  - scikit-learn=1.3
+  - matplotlib=3.10
+  - seaborn=0.13
+  - anndata=0.11
+  - scanpy=1.11
+  - h5py
+  - numba
+  - umap-learn
+  - statsmodels
+  - jinja2
+  - requests
+  - tqdm
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pip:
+      - rich
+      - fsspec
+

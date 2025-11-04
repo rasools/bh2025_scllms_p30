@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# conda
+.env
+.venv
+*.env
+
+# nextflow
+.work
+.nextflow*
+.cache/
+reports/
+results/
+
+# python
+__pycache__/
+*.pyc
+
+# docker artifacts
+*.tar
+
