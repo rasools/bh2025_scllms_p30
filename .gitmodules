@@ -1,0 +1,6 @@
+[submodule "external/scgpt"]
+	path = external/scgpt
+	url = https://github.com/rasools/scGPT.git
+[submodule "external/cancerfoundation"]
+	path = external/cancerfoundation
+	url = https://github.com/rasools/CancerFoundation.git
