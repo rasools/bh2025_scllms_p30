@@ -482,6 +482,18 @@ logger.info(f"Using device: {device}")
 ntokens = len(vocab)  # size of vocabulary
 model = TransformerModel(
     ntokens,
+    embsize,
+    nhead,
+    d_hid,
+    nlayers,
+    nlayers_cls=3,
+    n_cls=num_types if CLS else 1,
+    vocab=vocab,
+    dropout=dropout,
+    pad_token=pad_token,
+    pad_value=pad_value,
+    do_mvc=MVC,
+    do_dab=DAB,
     use_batch_labels=INPUT_BATCH_LABELS,
     num_batch_labels=num_batch_types,
     domain_spec_batchnorm=config.DSBN,
@@ -496,12 +508,12 @@ model = TransformerModel(
     pre_norm=config.pre_norm,
 )
 try:
-    model.load_state_dict(torch.load(model_file))
+    model.load_state_dict(torch.load(model_file, map_location=device))
     logger.info(f"Loading all model params from {model_file}")
 except:
     # only load params that are in the model and match the size
     model_dict = model.state_dict()
-    pretrained_dict = torch.load(model_file)
+    pretrained_dict = torch.load(model_file, map_location=device)
     pretrained_dict = {
         k: v
         for k, v in pretrained_dict.items()

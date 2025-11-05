@@ -28,6 +28,7 @@ help: ## Show this help message
 	@echo "  make prereq              - Install the requirements"
 	@echo "  make image               - Build the Docker image"
 	@echo "  make clean              - Clean Nextflow work directories and results"
+	@echo "  make clean-old          - Clean work/metadata of runs older than the latest nextflow run"
 	@echo "  make test               - Run with test parameters"
 	@echo ""
 	@echo "Parameters (can be overridden):"
@@ -44,8 +45,8 @@ prereq: ## Install the requirements
 	@pip show gdown
 	@echo "prerequisites installed"
 
-image: ## Build the Docker image
-	@docker build --quiet -t bh2025scllmsp30:latest -f scgpt.Dockerfile .
+image: $(PIPELINE_DIR)/scripts/scgpt/scgpt.Dockerfile ## Build the Docker image
+	@docker build --quiet -t bh2025scllmsp30-scgpt:latest -f $< $(PIPELINE_DIR)/scripts/scgpt/
 
 run: image download-data download-model ## Run the Nextflow pipeline
 	@cd $(PIPELINE_DIR) && nextflow run main.nf \

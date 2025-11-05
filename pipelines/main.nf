@@ -1,14 +1,14 @@
 // Default parameters
-params.config = "${projectDir}/scripts/config.yml"
+params.config = "${projectDir}/scripts/scgpt/config.yml"
 params.data_dir = "${projectDir}/data"
 params.model_dir = "${projectDir}/model/pan_cancer"
 
 // Python processing process
-process run_python_script {
+process fine_tuning {
     publishDir "./save"
-    // can be a log or remote docker tag
-    container "bh2025scllmsp30:latest"
-    tag "$input_val"
+    // can be a local or remote docker tag
+    container "bh2025scllmsp30-scgpt:latest"
+    tag "${script.baseName}"
     
     input:
     path script
@@ -29,6 +29,6 @@ process run_python_script {
 workflow {
     ch_data_dir = channel.of(params.data_dir)
     ch_model_dir = channel.of(params.model_dir)
-    ch_script = file("${projectDir}/scripts/test_scGPT.py")
-    run_python_script(ch_script, ch_data_dir, ch_model_dir)
+    ch_script = file("${projectDir}/scripts/scgpt/test_scGPT.py")
+    fine_tuning(ch_script, ch_data_dir, ch_model_dir)
 }
