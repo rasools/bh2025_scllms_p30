@@ -1,0 +1,28 @@
+{
+  // VS Code tasks to run the Makefile target `nextflow`
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Nextflow (Makefile)",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "run"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "JAVA_HOME": "/usr/local/opt/openjdk@17",
+          "PATH": "$JAVA_HOME/bin:$PATH"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
+
+
