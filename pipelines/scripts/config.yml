@@ -1,0 +1,11 @@
+# config.yaml
+# 
+model_path: "../pan_cancer/best_model.pt"
+vocab_json: "../pan_cancer/vocab.json"
+args_json: "../pan_cancer/args.json"
+adata_path: "../data/c_data.h5ad"
+adata_filtered_path: "../data/filtered_ms_adata.h5ad"
+output_dir: "./save/scgpt_run/"
+wandb_api_key: ""      # Optionnel si déjà configuré, sinon renseigne-le ici
+wandb_project: "scGPT"                   # Optionnel, le nom du projet WANDB
+
