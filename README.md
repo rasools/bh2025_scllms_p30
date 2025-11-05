@@ -15,6 +15,8 @@ Monorepo layout for scGPT, Cancer Foundation, and Nextflow pipelines.
 ### prerequisite
 
 - docker
+- nextflow
+- gdown python package
 
 ## usage
 

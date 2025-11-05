@@ -1,4 +1,5 @@
 import argparse
+import logging
 import yaml
 import os
 import json
@@ -14,9 +15,18 @@ from pathlib import Path
 
 # --- YAML argument parsing ---
 parser = argparse.ArgumentParser()
-parser.add_argument("--config", type=str, required=True, help="Path to YAML config file.")
+parser.add_argument("--config", type=str, 
+                    default=os.environ.get("CONFIG", "./config.yml"), 
+                    help="Path to YAML config file.")
 args = parser.parse_args()
 
+# --- Logging ---
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s - %(message)s"
+)
+logger = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
+logger.info("Using config file: %s", os.path.abspath(args.config))
 with open(args.config, "r") as f:
     CFG = yaml.safe_load(f)
 
@@ -29,6 +39,14 @@ adata_filtered_path = CFG["adata_filtered_path"]
 output_dir = Path(CFG["output_dir"])
 wandb_api_key = CFG.get("wandb_api_key", "")
 wandb_project = CFG.get("wandb_project", "scGPT")
+
+logger.info("Using cwd: %s", os.getcwd())
+logger.info("Using model path: %s", os.path.abspath(model_path))
+logger.info("Using vocab json: %s", os.path.abspath(vocab_json))
+logger.info("Using args json: %s", os.path.abspath(args_json))
+logger.info("Using adata path: %s", os.path.abspath(adata_path))
+logger.info("Using adata filtered path: %s", os.path.abspath(adata_filtered_path))
+logger.info("Using output dir: %s", os.path.abspath(output_dir))
 
 output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -457,24 +475,13 @@ def prepare_dataloader(
     )
     return data_loader
 
-
+logger.info(f"cuda is available: {torch.cuda.is_available()}")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+logger.info(f"Using device: {device}")
 
 ntokens = len(vocab)  # size of vocabulary
 model = TransformerModel(
     ntokens,
-    embsize,
-    nhead,
-    d_hid,
-    nlayers,
-    nlayers_cls=3,
-    n_cls=num_types if CLS else 1,
-    vocab=vocab,
-    dropout=dropout,
-    pad_token=pad_token,
-    pad_value=pad_value,
-    do_mvc=MVC,
-    do_dab=DAB,
     use_batch_labels=INPUT_BATCH_LABELS,
     num_batch_labels=num_batch_types,
     domain_spec_batchnorm=config.DSBN,
