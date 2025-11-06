@@ -24,7 +24,7 @@ help: ## Show this help message
 	@echo "Nextflow Pipeline Makefile"
 	@echo ""
 	@echo "Usage:"
-	@echo "  make run                 - Run the pipeline with default parameters"
+	@echo "  make scgpt                 - Run the scgpt pipeline with default parameters"
 	@echo "  make prereq              - Install the requirements"
 	@echo "  make image               - Build the Docker image"
 	@echo "  make clean              - Clean Nextflow work directories and results"
@@ -48,8 +48,8 @@ prereq: ## Install the requirements
 image: $(PIPELINE_DIR)/scripts/scgpt/scgpt.Dockerfile ## Build the Docker image
 	@docker build -t bh2025scllmsp30-scgpt:latest -f $< $(PIPELINE_DIR)/scripts/scgpt/
 
-run: image download-data download-model ## Run the Nextflow pipeline
-	@cd $(PIPELINE_DIR) && nextflow run main.nf
+scgpt: download-data download-model ## Run the Nextflow pipeline
+	@cd $(PIPELINE_DIR) && nextflow run -main-script ./workflows/scgpt_fine_tuning_cell_types_workflow.nf
 
 test: ## Run with test parameters
 	$(MAKE) run INPUT_VALUE=test PROCESSING_MODE=test
