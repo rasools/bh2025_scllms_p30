@@ -481,11 +481,11 @@ logger.info(f"Using device: {device}")
 
 ntokens = len(vocab)  # size of vocabulary
 model = TransformerModel(
-    ntokens,
-    embsize,
-    nhead,
-    d_hid,
-    nlayers,
+    ntoken=ntokens,
+    d_model=embsize,
+    nhead=nhead,
+    d_hid=d_hid,
+    nlayers=nlayers,
     nlayers_cls=3,
     n_cls=num_types if CLS else 1,
     vocab=vocab,

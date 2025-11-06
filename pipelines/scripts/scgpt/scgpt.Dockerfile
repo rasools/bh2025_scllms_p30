@@ -9,4 +9,6 @@ RUN pip install --quiet "llvmlite>=0.38.0,<0.39.0" "numba>=0.55.1,<0.56.0" "nump
 # Utile pour plots/données (souvent déjà dans l'image, mais ça ne fait pas de mal)
 RUN pip install --quiet matplotlib pandas
 
+RUN pip install --quiet "flash-attn==1.0.5"
+
 # (PAS de scib-metrics, chex, jax ici : conflits, pas nécessaires pour le tuto d’annotation)

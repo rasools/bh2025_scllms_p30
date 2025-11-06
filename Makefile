@@ -46,7 +46,7 @@ prereq: ## Install the requirements
 	@echo "prerequisites installed"
 
 image: $(PIPELINE_DIR)/scripts/scgpt/scgpt.Dockerfile ## Build the Docker image
-	@docker build --quiet -t bh2025scllmsp30-scgpt:latest -f $< $(PIPELINE_DIR)/scripts/scgpt/
+	@docker build -t bh2025scllmsp30-scgpt:latest -f $< $(PIPELINE_DIR)/scripts/scgpt/
 
 run: image download-data download-model ## Run the Nextflow pipeline
 	@cd $(PIPELINE_DIR) && nextflow run main.nf \
