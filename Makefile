@@ -49,9 +49,7 @@ image: $(PIPELINE_DIR)/scripts/scgpt/scgpt.Dockerfile ## Build the Docker image
 	@docker build -t bh2025scllmsp30-scgpt:latest -f $< $(PIPELINE_DIR)/scripts/scgpt/
 
 run: image download-data download-model ## Run the Nextflow pipeline
-	@cd $(PIPELINE_DIR) && nextflow run main.nf \
-		--input_value $(INPUT_VALUE) \
-		--processing_mode $(PROCESSING_MODE)
+	@cd $(PIPELINE_DIR) && nextflow run main.nf
 
 test: ## Run with test parameters
 	$(MAKE) run INPUT_VALUE=test PROCESSING_MODE=test
