@@ -1,5 +1,4 @@
 import argparse
-import logging
 import yaml
 import os
 import json
@@ -15,18 +14,9 @@ from pathlib import Path
 
 # --- YAML argument parsing ---
 parser = argparse.ArgumentParser()
-parser.add_argument("--config", type=str, 
-                    default=os.environ.get("CONFIG", "./config.yml"), 
-                    help="Path to YAML config file.")
+parser.add_argument("--config", type=str, required=True, help="Path to YAML config file.")
 args = parser.parse_args()
 
-# --- Logging ---
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s - %(message)s"
-)
-logger = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
-logger.info("Using config file: %s", os.path.abspath(args.config))
 with open(args.config, "r") as f:
     CFG = yaml.safe_load(f)
 
@@ -40,13 +30,6 @@ output_dir = Path(CFG["output_dir"])
 wandb_api_key = CFG.get("wandb_api_key", "")
 wandb_project = CFG.get("wandb_project", "scGPT")
 
-logger.info("Using cwd: %s", os.getcwd())
-logger.info("Using model path: %s", os.path.abspath(model_path))
-logger.info("Using vocab json: %s", os.path.abspath(vocab_json))
-logger.info("Using args json: %s", os.path.abspath(args_json))
-logger.info("Using adata path: %s", os.path.abspath(adata_path))
-logger.info("Using adata filtered path: %s", os.path.abspath(adata_filtered_path))
-logger.info("Using output dir: %s", os.path.abspath(output_dir))
 # --- Generic keys for AnnData ---
 celltype_key = CFG.get("celltype_key", "celltype")
 batch_key = CFG.get("batch_key", "batch")
@@ -494,17 +477,15 @@ def prepare_dataloader(
     )
     return data_loader
 
-logger.info(f"cuda is available: {torch.cuda.is_available()}")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-logger.info(f"Using device: {device}")
 
 ntokens = len(vocab)  # size of vocabulary
 model = TransformerModel(
-    ntoken=ntokens,
-    d_model=embsize,
-    nhead=nhead,
-    d_hid=d_hid,
-    nlayers=nlayers,
+    ntokens,
+    embsize,
+    nhead,
+    d_hid,
+    nlayers,
     nlayers_cls=3,
     n_cls=num_types if CLS else 1,
     vocab=vocab,
@@ -527,11 +508,11 @@ model = TransformerModel(
     pre_norm=bool(config.pre_norm),
 )
 try:
-    model.load_state_dict(torch.load(model_file, map_location=device))
+    model.load_state_dict(torch.load(model_file, map_location="cpu"))
     logger.info(f"Loading all model params from {model_file}")
 except Exception:
     model_dict = model.state_dict()
-    pretrained_dict = torch.load(model_file, map_location=device)
+    pretrained_dict = torch.load(model_file, map_location="cpu")
     pretrained_dict = {
         k: v
         for k, v in pretrained_dict.items()
@@ -734,13 +715,17 @@ def define_wandb_metrcis():
     wandb.define_metric("valid/err", summary="min", step_metric="epoch")
     wandb.define_metric("test/avg_bio", summary="max")
 
-def evaluate(model: nn.Module, loader: DataLoader, return_raw: bool = False):
+def evaluate(model: nn.Module, loader: DataLoader, return_raw: bool = False, normalise=False):
     model.eval()
     total_loss = 0.0
     total_err = 0.0
     total_num = 0
     predictions = []
+    cell_embeddings = np.zeros(
+        (len(loader.dataset), embsize), dtype=np.float32
+    )
     with torch.no_grad():
+        count = 0
         for batch_data in loader:
             input_gene_ids = batch_data["gene_ids"].to(device)
             input_values = batch_data["values"].to(device)
@@ -762,6 +747,9 @@ def evaluate(model: nn.Module, loader: DataLoader, return_raw: bool = False):
                     do_sample=do_sample_in_train,
                 )
                 output_values = output_dict["cls_output"]
+                cell_emb = output_dict["cell_emb"].cpu().numpy()
+                cell_embeddings[count: count + len(cell_emb)] = cell_emb
+                count += len(cell_emb)
                 loss = nn.CrossEntropyLoss()(output_values, celltype_labels)
 
             total_loss += float(loss.item()) * len(input_gene_ids)
@@ -779,8 +767,14 @@ def evaluate(model: nn.Module, loader: DataLoader, return_raw: bool = False):
         },
     )
     if return_raw:
-        return np.concatenate(predictions, axis=0)
-    return total_loss / total_num, total_err / total_num
+        return np.concatenate(predictions, axis=0), cell_embeddings
+    
+    if normalise:
+        cell_embeddings = cell_embeddings / np.linalg.norm(
+            cell_embeddings, axis=1, keepdims=True
+        )
+    return total_loss / total_num, total_err / total_num, cell_embeddings
+
 
 best_val_loss = float("inf")
 best_model = None
@@ -807,7 +801,7 @@ for epoch in range(1, epochs + 1):
     if bool(config.do_train):
         train(model, loader=train_loader)
 
-    val_loss, val_err = evaluate(model, loader=valid_loader)
+    val_loss, val_err, cell_embeddings = evaluate(model, loader=valid_loader)
     elapsed = time.time() - epoch_start_time
     logger.info("-" * 89)
     logger.info(
@@ -872,7 +866,7 @@ def test(model: nn.Module, adata: AnnData):
     )
 
     model.eval()
-    predictions = evaluate(model, loader=test_loader, return_raw=True)
+    predictions, cell_embeddings = evaluate(model, loader=test_loader, return_raw=True)
 
     from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
     accuracy = accuracy_score(celltypes_labels, predictions)
@@ -890,10 +884,57 @@ def test(model: nn.Module, adata: AnnData):
         "test/recall": recall,
         "test/macro_f1": macro_f1,
     }
-    return predictions, celltypes_labels, results
+    return predictions, celltypes_labels, results, cell_embeddings
 
-predictions, labels, results = test(best_model, adata_test)
+predictions, labels, results, cell_embeddings = test(best_model, adata_test)
 adata_test_raw.obs[pred_key] = [id2type[p] for p in predictions]
+adata_test_raw.obsm["scGPT"] = cell_embeddings
+
+#Save immediately after embedding (critical output)
+output_h5ad_path = f"{output_dir}/embeddings.h5ad"
+adata_test_raw.write_h5ad(output_h5ad_path)
+
+#clean
+import gc
+import torch
+gc.collect()
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
+
+# Compute UMAP
+compute_umap = True
+umap_png_path = f"{output_dir}/umap_embeddings.png"
+adata_embedded = adata_test_raw.copy()
+if compute_umap:
+    import sys
+    import numpy as np
+    
+    # Ensure embedding array is clean and C-contiguous
+    if "scGPT" in adata_embedded.obsm:
+        adata_embedded.obsm["scGPT"] = np.ascontiguousarray(
+            adata_embedded.obsm["scGPT"], dtype=np.float32
+        )
+    
+    gc.collect()
+    
+    try:
+        sc.pp.neighbors(adata_embedded, use_rep="scGPT")
+        sc.tl.umap(adata_embedded)
+        if umap_png_path is not None:
+            os.makedirs(os.path.dirname(umap_png_path) or ".", exist_ok=True)
+            fig = sc.pl.umap(
+                adata_embedded,
+                color=[celltype_key] if celltype_key else None,
+                frameon=False,
+                palette=sc.pl.palettes.default_20,
+                legend_loc=None,
+                return_fig=True,
+                title=["UMAP"] if celltype_key else ["UMAP"],
+            )
+            fig.savefig(umap_png_path, bbox_inches="tight", dpi=200)
+    except Exception as e:
+        print(f"Warning: UMAP computation failed: {e}", file=sys.stderr)
+
 
 # plot
 palette_colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
