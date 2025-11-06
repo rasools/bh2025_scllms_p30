@@ -90,7 +90,7 @@ from typing import List, Tuple, Dict, Union, Optional
 import warnings
 
 from anndata import AnnData
-import scvi
+# import scvi
 from scipy.sparse import issparse
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
