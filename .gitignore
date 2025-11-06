@@ -23,3 +23,7 @@ __pycache__/
 # data and model
 pipelines/data/
 pipelines/model/
+
+*Zone.Identifier
+docker
+
