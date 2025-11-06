@@ -898,7 +898,7 @@ def evaluate_embedding(model: nn.Module, loader: DataLoader, return_raw: bool = 
                     do_sample=do_sample_in_train,
                     #generative_training = False,
                 )
-                emb = output_dict["emb"].cpu().numpy()
+                # emb = output_dict["emb"].cpu().numpy()
                 cell_emb = output_dict["cell_emb"].cpu().numpy()
                 cell_embeddings[count: count + len(cell_emb)] = cell_emb
                 count += len(cell_emb)
