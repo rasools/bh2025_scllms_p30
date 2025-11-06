@@ -1,14 +1,33 @@
-FROM xueerchen/scgpt:0.1.7
+# Change the cuda version depending on your GPU
+FROM docker.io/pytorch/pytorch:2.3.0-cuda12.1-cudnn8-devel
 
-# Optionnel : JupyterLab pour l'utilisation notebook (enlève si tu veux bosser en pur script/VS Code)
-RUN pip install --quiet jupyterlab
+# Set environment variable to prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Forcer les versions strictes compatibles scGPT
-RUN pip install --quiet "llvmlite>=0.38.0,<0.39.0" "numba>=0.55.1,<0.56.0" "numpy<1.23" "scgpt==0.2.4"
+# Update the package list
+RUN apt-get update -y
 
-# Utile pour plots/données (souvent déjà dans l'image, mais ça ne fait pas de mal)
-RUN pip install --quiet matplotlib pandas
+# Install git
+RUN apt-get install -y git
 
-RUN pip install --quiet "flash-attn==1.0.5"
+# Install r-base and tzdata
+# RUN apt-get install -y r-base tzdata
 
-# (PAS de scib-metrics, chex, jax ici : conflits, pas nécessaires pour le tuto d’annotation)
+# Install Python packages using pip
+# RUN pip install packaging
+# RUN pip install scgpt "flash-attn<1.0.5"
+# RUN pip install markupsafe==2.0.1
+# RUN pip install wandb jupyterlab ipykernel notebook
+
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
+
+# Optional: Install torch-geometric
+# RUN pip install torch-geometric
+
+# If running Jupyter server, can omit
+# Expose Jupyter port
+EXPOSE 8888
+
+# Run Jupyter server
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--allow-root", "--no-browser"]
