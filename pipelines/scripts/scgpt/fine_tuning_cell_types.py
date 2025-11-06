@@ -1,4 +1,5 @@
 import argparse
+import logging
 import yaml
 import os
 import json
@@ -17,6 +18,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--config", type=str, required=True, help="Path to YAML config file.")
 args = parser.parse_args()
 
+# --- Logging ---
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s - %(message)s"
+)
+logger = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
+logger.info("Using config file: %s", os.path.abspath(args.config))
+
 with open(args.config, "r") as f:
     CFG = yaml.safe_load(f)
 
@@ -29,6 +38,14 @@ adata_filtered_path = CFG["adata_filtered_path"]
 output_dir = Path(CFG["output_dir"])
 wandb_api_key = CFG.get("wandb_api_key", "")
 wandb_project = CFG.get("wandb_project", "scGPT")
+
+logger.info("Using cwd: %s", os.getcwd())
+logger.info("Using model path: %s", os.path.abspath(model_path))
+logger.info("Using vocab json: %s", os.path.abspath(vocab_json))
+logger.info("Using args json: %s", os.path.abspath(args_json))
+logger.info("Using adata path: %s", os.path.abspath(adata_path))
+logger.info("Using adata filtered path: %s", os.path.abspath(adata_filtered_path))
+logger.info("Using output dir: %s", os.path.abspath(output_dir))
 
 # --- Generic keys for AnnData ---
 celltype_key = CFG.get("celltype_key", "celltype")
@@ -477,15 +494,18 @@ def prepare_dataloader(
     )
     return data_loader
 
+logger.info(f"cuda is available: {torch.cuda.is_available()}")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+logger.info(f"Using device: {device}")
+
 
 ntokens = len(vocab)  # size of vocabulary
 model = TransformerModel(
-    ntokens,
-    embsize,
-    nhead,
-    d_hid,
-    nlayers,
+    ntoken=ntokens,
+    d_model=embsize,
+    nhead=nhead,
+    d_hid=d_hid,
+    nlayers=nlayers,
     nlayers_cls=3,
     n_cls=num_types if CLS else 1,
     vocab=vocab,
@@ -508,11 +528,11 @@ model = TransformerModel(
     pre_norm=bool(config.pre_norm),
 )
 try:
-    model.load_state_dict(torch.load(model_file, map_location="cpu"))
+    model.load_state_dict(torch.load(model_file, map_location=device))
     logger.info(f"Loading all model params from {model_file}")
 except Exception:
     model_dict = model.state_dict()
-    pretrained_dict = torch.load(model_file, map_location="cpu")
+    pretrained_dict = torch.load(model_file, map_location=device)
     pretrained_dict = {
         k: v
         for k, v in pretrained_dict.items()
