@@ -39,7 +39,10 @@ help: ## Show this help message
 	@echo "  make run INPUT_VALUE=my_data PROCESSING_MODE=debug"
 	@echo "  make test"
 
-prereq: ## Install the requirements
+setup: ## install prerequisites
+	@pip install gdown
+
+prereq: ## verify the prerequisites
 	@docker version
 	@nextflow info
 	@pip show gdown

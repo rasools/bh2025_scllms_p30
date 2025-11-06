@@ -2,12 +2,13 @@
 params.config = "${projectDir}/../scripts/scgpt/config.yml"
 params.data_dir = "${projectDir}/../data"
 params.model_dir = "${projectDir}/../model/pan_cancer"
+params.container_image = "bh2025scllmsp30-scgpt:latest"
 
 // Python processing process
 process fine_tuning_cell_types {
     publishDir "./save"
     // can be a local or remote docker tag
-    container "bh2025scllmsp30-scgpt:latest"
+    container "${params.container_image}"
     tag "fine_tuning_cell_types"
     
     input:
