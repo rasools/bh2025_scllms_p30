@@ -30,5 +30,8 @@ process fine_tuning_cell_types {
 workflow {
     ch_data_dir = channel.of(params.data_dir)
     ch_model_dir = channel.of(params.model_dir)
-    fine_tuning_cell_types(ch_data_dir, ch_model_dir)
+    fine_tuning_cell_types(
+        ch_data_dir, 
+        ch_model_dir
+    )
 }

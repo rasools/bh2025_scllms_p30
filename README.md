@@ -32,5 +32,5 @@ make scgpt
 ```
 
 ### customising the docker image
-Please update your workspace with my latest contribution.
+
 You might need to specify the name of the docker image you use using the nextflow config parameter _container_image_, which you can specify in a config file such as `~/.nextflow/config`. This file is read automatically so there is no need to change the commandlines.
