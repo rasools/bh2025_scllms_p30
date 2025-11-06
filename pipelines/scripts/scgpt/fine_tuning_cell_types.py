@@ -15,7 +15,9 @@ from pathlib import Path
 
 # --- YAML argument parsing ---
 parser = argparse.ArgumentParser()
-parser.add_argument("--config", type=str, required=True, help="Path to YAML config file.")
+parser.add_argument("--config", type=str, 
+                    default=os.environ.get("CONFIG", "./config.yml"), 
+                    help="Path to YAML config file.")
 args = parser.parse_args()
 
 # --- Logging ---
