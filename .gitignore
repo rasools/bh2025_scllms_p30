@@ -12,6 +12,7 @@
 .cache/
 reports/
 results/
+output/
 
 # python
 __pycache__/
