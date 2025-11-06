@@ -1,7 +1,7 @@
 // Default parameters
-params.config = "${projectDir}/scripts/scgpt/config.yml"
-params.data_dir = "${projectDir}/data"
-params.model_dir = "${projectDir}/model/pan_cancer"
+params.config = "${projectDir}/../scripts/scgpt/config.yml"
+params.data_dir = "${projectDir}/../data"
+params.model_dir = "${projectDir}/../model/pan_cancer"
 
 // Python processing process
 process fine_tuning_cell_types {
@@ -20,7 +20,8 @@ process fine_tuning_cell_types {
     script:
     """
     export CONFIG="${params.config}"
-    python3 "${projectDir}/scripts/scgpt/fine_tuning_cell_types.py"
+    echo "projectDir: ${projectDir}"
+    python3 "${projectDir}/../scripts/scgpt/fine_tuning_cell_types.py"
     """
 }
 

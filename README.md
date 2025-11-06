@@ -22,7 +22,7 @@ Monorepo layout for scGPT, Cancer Foundation, and Nextflow pipelines.
 
 ```bash
 cd pipelines
-nextflow run ./workflows/scgpt_fine_tuning_cell_types_workflow.nf
+nextflow run . -main-script ./workflows/scgpt_fine_tuning_cell_types_workflow.nf
 ```
 
 Alternatively you could use the makefile for some common scenarios.
