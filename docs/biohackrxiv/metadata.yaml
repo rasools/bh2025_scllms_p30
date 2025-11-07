@@ -1,0 +1,14 @@
+title: "BioHackathon Europe 2025 Project Report"
+subtitle: "Single-cell LLMs P30"
+authors:
+  - name: "Name"
+    affiliation: "Affiliation"
+  - name: "Collaborators"
+    affiliation: "Affiliation"
+date: "2025-11-07"
+keywords: [biohackathon, single-cell, LLM, integration]
+url: "https://github.com/rasools/bh2025_scllms_p30"
+license: "CC-BY-4.0"
+abstract: |
+  short summary here.
+
