@@ -1,8 +1,7 @@
-.PHONY: help run clean test clean-old
+.PHONY: help run clean test clean-old image scgpt
 
 # Default parameters (can be overridden)
-INPUT_VALUE ?= test2
-PROCESSING_MODE ?= production
+DOCKER_TAG ?= bh2025scllmsp30-scgpt:latest
 
 # Pipeline directory
 PIPELINE_DIR = pipelines
@@ -49,11 +48,13 @@ prereq: ## verify the prerequisites
 	@echo "prerequisites installed"
 
 image: $(PIPELINE_DIR)/scripts/scgpt/scgpt.Dockerfile ## Build the Docker image
-	@docker build -t bh2025scllmsp30-scgpt:latest -f $< $(PIPELINE_DIR)/scripts/scgpt/
+	@docker build -t $(DOCKER_TAG) -f $< $(PIPELINE_DIR)/scripts/scgpt/
 
 scgpt: download-data download-model ## Run the Nextflow pipeline
 	@cd $(PIPELINE_DIR) && \
-		nextflow run . -main-script ./workflows/scgpt_fine_tuning_cell_types_workflow.nf
+		nextflow run . \
+			-main-script ./workflows/scgpt_fine_tuning_cell_types_workflow.nf \
+			--container_image $(DOCKER_TAG)
 
 test: ## Run with test parameters
 	$(MAKE) run INPUT_VALUE=test PROCESSING_MODE=test
@@ -64,7 +65,6 @@ clean: ## Clean Nextflow work directories and results
 	rm -rf $(PIPELINE_DIR)/.nextflow*
 	rm -rf .nextflow*
 	cd $(PIPELINE_DIR) && nextflow clean -f
-
 
 clean-old: ## Clean work/metadata of runs older than the latest
 	@RUN_ID=$$(cd $(PIPELINE_DIR) && nextflow log -q | tail -1); \
