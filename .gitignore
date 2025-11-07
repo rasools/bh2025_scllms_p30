@@ -12,6 +12,7 @@
 .cache/
 reports/
 results/
+output/
 
 # python
 __pycache__/
@@ -19,4 +20,11 @@ __pycache__/
 
 # docker artifacts
 *.tar
+
+# data and model
+pipelines/data/
+pipelines/model/
+
+*Zone.Identifier
+docker
 
